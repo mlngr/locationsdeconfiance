@@ -10,3 +10,16 @@ body { @apply bg-white text-gray-900; }
 .btn-primary { @apply bg-black text-white hover:bg-gray-800; }
 .btn-outline { @apply border hover:bg-gray-50; }
 .input { @apply w-full border rounded-xl p-3; }
+
+/* Screen reader only class for accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

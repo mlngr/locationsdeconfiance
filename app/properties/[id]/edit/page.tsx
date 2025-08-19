@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useParams } from "next/navigation";
-import { uploadPhotos } from "@/lib/storage";
+import { uploadPhotos, deletePhotos, getStoragePathFromUrl } from "@/lib/storage";
 import NavBar from "@/components/NavBar";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { Property } from "@/types";
@@ -19,6 +19,7 @@ export default function EditPropertyPage() {
   const [files, setFiles] = useState<FileList | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | undefined>();
+  const [deletingPhotoIndex, setDeletingPhotoIndex] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -61,9 +62,11 @@ export default function EditPropertyPage() {
       return;
     }
 
-    // Validate photos limit
-    if (files && files.length > 6) {
-      setErr("Vous ne pouvez uploader que 6 photos maximum.");
+    // Validate photos limit (current + new files)
+    const currentPhotoCount = property?.photos?.length || 0;
+    const newFileCount = files?.length || 0;
+    if (currentPhotoCount + newFileCount > 6) {
+      setErr(`Vous ne pouvez avoir que 6 photos maximum. Vous avez ${currentPhotoCount} photos et ajoutez ${newFileCount} nouvelles.`);
       setLoading(false);
       return;
     }
@@ -74,8 +77,8 @@ export default function EditPropertyPage() {
 
       let photos = property?.photos || [];
       if (files && files.length > 0) {
-        const newPhotos = await uploadPhotos(Array.from(files), user.id);
-        photos = [...photos, ...newPhotos].slice(0, 6); // Keep max 6 photos
+        const { urls: newPhotos } = await uploadPhotos(Array.from(files), user.id, params.id);
+        photos = [...photos, ...newPhotos];
       }
 
       const { error } = await supabase
@@ -97,6 +100,39 @@ export default function EditPropertyPage() {
       setErr(e.message || "Erreur");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRemovePhoto = async (index: number) => {
+    if (!property || !property.photos) return;
+    
+    setDeletingPhotoIndex(index);
+    try {
+      const photoUrl = property.photos[index];
+      const photoPath = getStoragePathFromUrl(photoUrl);
+      
+      // Delete from storage
+      await deletePhotos([photoPath]);
+      
+      // Update local state
+      const updatedPhotos = property.photos.filter((_, i) => i !== index);
+      setProperty({ ...property, photos: updatedPhotos });
+      
+      // Update database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Veuillez vous connecter.");
+
+      const { error } = await supabase
+        .from("properties")
+        .update({ photos: updatedPhotos })
+        .eq("id", params.id)
+        .eq("owner_id", user.id);
+
+      if (error) throw error;
+    } catch (e: any) {
+      setErr(e.message || "Erreur lors de la suppression de la photo");
+    } finally {
+      setDeletingPhotoIndex(null);
     }
   };
 
@@ -167,12 +203,26 @@ export default function EditPropertyPage() {
             {property.photos && property.photos.length > 0 && (
               <div className="grid grid-cols-3 gap-2 mb-3">
                 {property.photos.map((url, i) => (
-                  <img
-                    key={i}
-                    src={url}
-                    alt={`Photo ${i + 1}`}
-                    className="w-full h-20 object-cover rounded"
-                  />
+                  <div key={i} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Photo ${i + 1}`}
+                      className="w-full h-20 object-cover rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePhoto(i)}
+                      disabled={deletingPhotoIndex === i}
+                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                      title="Supprimer cette photo"
+                    >
+                      {deletingPhotoIndex === i ? (
+                        <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        "×"
+                      )}
+                    </button>
+                  </div>
                 ))}
               </div>
             )}

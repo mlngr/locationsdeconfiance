@@ -34,14 +34,39 @@ export default function NewPropertyPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Veuillez vous connecter.");
+      
+      // First create the property without photos
+      const { data: property, error: insertError } = await supabase
+        .from("properties")
+        .insert({
+          owner_id: user.id, 
+          title, 
+          description, 
+          price, 
+          city, 
+          postal_code: postalCode, 
+          photos: []
+        })
+        .select()
+        .single();
+      
+      if (insertError) throw insertError;
+      
+      // Then upload photos with the property ID
       let photos: string[] = [];
-      if (files && files.length > 0) {
-        photos = await uploadPhotos(Array.from(files), user.id);
+      if (files && files.length > 0 && property) {
+        const { urls } = await uploadPhotos(Array.from(files), user.id, property.id);
+        photos = urls;
+        
+        // Update the property with the photo URLs
+        const { error: updateError } = await supabase
+          .from("properties")
+          .update({ photos })
+          .eq("id", property.id);
+          
+        if (updateError) throw updateError;
       }
-      const { error } = await supabase.from("properties").insert({
-        owner_id: user.id, title, description, price, city, postal_code: postalCode, photos
-      });
-      if (error) throw error;
+      
       router.push("/properties");
     } catch (e:any) {
       setErr(e.message || "Erreur");
