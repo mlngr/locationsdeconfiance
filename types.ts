@@ -5,6 +5,7 @@ export type Property = {
   description: string;
   price: number;
   city: string;
+  postal_code: string;
   photos: string[];
   created_at: string;
 };

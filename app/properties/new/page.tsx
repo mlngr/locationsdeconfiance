@@ -8,6 +8,7 @@ import NavBar from "@/components/NavBar";
 export default function NewPropertyPage() {
   const [title,setTitle]=useState(""); const [description,setDescription]=useState("");
   const [price,setPrice]=useState<number>(0); const [city,setCity]=useState("");
+  const [postalCode,setPostalCode]=useState("");
   const [files, setFiles] = useState<FileList | null>(null);
   const [loading,setLoading]=useState(false);
   const [err,setErr]=useState<string|undefined>(); const router = useRouter();
@@ -15,6 +16,21 @@ export default function NewPropertyPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true); setErr(undefined);
+    
+    // Validate postal code (5 digits)
+    if (!/^\d{5}$/.test(postalCode)) {
+      setErr("Le code postal doit contenir exactement 5 chiffres.");
+      setLoading(false);
+      return;
+    }
+    
+    // Validate photos limit
+    if (files && files.length > 6) {
+      setErr("Vous ne pouvez uploader que 6 photos maximum.");
+      setLoading(false);
+      return;
+    }
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Veuillez vous connecter.");
@@ -23,7 +39,7 @@ export default function NewPropertyPage() {
         photos = await uploadPhotos(Array.from(files), user.id);
       }
       const { error } = await supabase.from("properties").insert({
-        owner_id: user.id, title, description, price, city, photos
+        owner_id: user.id, title, description, price, city, postal_code: postalCode, photos
       });
       if (error) throw error;
       router.push("/properties");
@@ -44,9 +60,28 @@ export default function NewPropertyPage() {
           <textarea className="input" placeholder="Description" value={description} onChange={e=>setDescription(e.target.value)} required/>
           <input type="number" className="input" placeholder="Prix (€/mois)" value={price} onChange={e=>setPrice(Number(e.target.value)||0)} required/>
           <input className="input" placeholder="Ville" value={city} onChange={e=>setCity(e.target.value)} required/>
+          <input 
+            className="input" 
+            placeholder="Code postal (5 chiffres)" 
+            value={postalCode} 
+            onChange={e=>setPostalCode(e.target.value)} 
+            pattern="\d{5}"
+            title="Le code postal doit contenir exactement 5 chiffres"
+            required
+          />
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Photos (JPEG/PNG, multiple)</label>
-            <input type="file" multiple accept="image/*" onChange={e=>setFiles(e.target.files)} />
+            <label className="block text-sm text-gray-600 mb-1">
+              Photos (JPEG/PNG, max 6) {files && `${files.length}/6`}
+            </label>
+            <input 
+              type="file" 
+              multiple 
+              accept="image/*" 
+              onChange={e=>setFiles(e.target.files)} 
+            />
+            {files && files.length > 6 && (
+              <p className="text-red-600 text-sm mt-1">Maximum 6 photos autorisées</p>
+            )}
           </div>
           {err && <p className="text-red-600">{err}</p>}
           <button disabled={loading} className="btn btn-primary">{loading ? "Publication..." : "Publier"}</button>
