@@ -16,6 +16,8 @@ export default function PropertyDetail() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -55,6 +57,31 @@ export default function PropertyDetail() {
   const prevImage = () => {
     if (p?.photos?.length > 0) {
       setCurrentImageIndex((prev) => (prev - 1 + p.photos.length) % p.photos.length);
+    }
+  };
+
+  // Handle touch events for mobile swipe
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      nextImage();
+    } else if (isRightSwipe) {
+      prevImage();
     }
   };
 
@@ -114,13 +141,20 @@ export default function PropertyDetail() {
         {/* Image Carousel */}
         {photos.length > 0 ? (
           <div className="mt-6 relative">
-            <div className="aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden">
+            <div 
+              className="aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden cursor-grab active:cursor-grabbing"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
               <Image 
                 src={photos[currentImageIndex]} 
                 alt={`Photo ${currentImageIndex + 1} de ${p.title}`} 
                 width={800} 
                 height={450} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover select-none"
+                priority={currentImageIndex === 0}
+                draggable={false}
               />
             </div>
             
@@ -163,6 +197,11 @@ export default function PropertyDetail() {
                 {/* Counter */}
                 <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
                   {currentImageIndex + 1} / {photos.length}
+                </div>
+                
+                {/* Mobile swipe hint */}
+                <div className="absolute bottom-16 left-1/2 -translate-x-1/2 text-white text-sm bg-black bg-opacity-50 px-3 py-1 rounded-full opacity-75 md:hidden">
+                  Balayez pour naviguer
                 </div>
               </>
             )}
