@@ -5,14 +5,22 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Property } from "@/types";
 import Image from "next/image";
+import DeleteModal from "@/components/DeleteModal";
+import { deletePhotos, getStoragePathFromUrl } from "@/lib/storage";
+import { useRouter } from "next/navigation";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [role, setRole] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const propertiesPerPage = 6;
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -34,6 +42,42 @@ export default function DashboardPage() {
       setLoading(false);
     })();
   }, []);
+
+  const handleDeleteProperty = async () => {
+    if (!propertyToDelete) return;
+    
+    setDeleteLoading(true);
+    try {
+      // First, delete all photos from storage
+      if (propertyToDelete.photos && propertyToDelete.photos.length > 0) {
+        const photoPaths = propertyToDelete.photos.map(url => getStoragePathFromUrl(url));
+        try {
+          await deletePhotos(photoPaths);
+        } catch (storageError) {
+          console.error("Error deleting photos from storage:", storageError);
+          // Continue with property deletion even if photo deletion fails
+        }
+      }
+
+      // Then delete the property from database
+      const { error } = await supabase
+        .from("properties")
+        .delete()
+        .eq("id", propertyToDelete.id)
+        .eq("owner_id", userId);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setProperties(prev => prev.filter(p => p.id !== propertyToDelete.id));
+      setPropertyToDelete(null);
+      setDeleteModalOpen(false);
+    } catch (e: any) {
+      alert(e.message || "Erreur lors de la suppression");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   if (!userId) {
     return (
@@ -57,6 +101,12 @@ export default function DashboardPage() {
     <main>
       <NavBar />
       <div className="container py-12 space-y-6">
+        <Breadcrumbs
+          items={[
+            { label: "Accueil", href: "/" },
+            { label: "Mes annonces" }
+          ]}
+        />
         <h1 className="text-3xl font-bold">Dashboard</h1>
         {role === "owner" ? (
           <div className="space-y-6">
@@ -118,6 +168,15 @@ export default function DashboardPage() {
                           >
                             Éditer
                           </Link>
+                          <button
+                            onClick={() => {
+                              setPropertyToDelete(property);
+                              setDeleteModalOpen(true);
+                            }}
+                            className="btn bg-red-600 text-white hover:bg-red-700 flex-1"
+                          >
+                            Supprimer
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -164,6 +223,17 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      
+      <DeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setPropertyToDelete(null);
+        }}
+        onConfirm={handleDeleteProperty}
+        loading={deleteLoading}
+        title={propertyToDelete?.title || ""}
+      />
     </main>
   );
 }

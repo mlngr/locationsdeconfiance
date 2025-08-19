@@ -7,6 +7,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import Image from "next/image";
 import Link from "next/link";
 import DeleteModal from "@/components/DeleteModal";
+import { deletePhotos, getStoragePathFromUrl } from "@/lib/storage";
 
 export default function PropertyDetail() {
   const params = useParams<{ id: string }>();
@@ -32,6 +33,18 @@ export default function PropertyDetail() {
   const handleDelete = async () => {
     setDeleteLoading(true);
     try {
+      // First, delete all photos from storage
+      if (p?.photos && p.photos.length > 0) {
+        const photoPaths = p.photos.map((url: string) => getStoragePathFromUrl(url));
+        try {
+          await deletePhotos(photoPaths);
+        } catch (storageError) {
+          console.error("Error deleting photos from storage:", storageError);
+          // Continue with property deletion even if photo deletion fails
+        }
+      }
+
+      // Then delete the property from database
       const { error } = await supabase
         .from("properties")
         .delete()
@@ -141,6 +154,14 @@ export default function PropertyDetail() {
         {/* Image Carousel */}
         {photos.length > 0 ? (
           <div className="mt-6 relative">
+            {/* Hidden aria-live region for screen readers */}
+            <div 
+              aria-live="polite" 
+              aria-atomic="true" 
+              className="sr-only"
+            >
+              Image {currentImageIndex + 1} sur {photos.length}
+            </div>
             <div 
               className="aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden cursor-grab active:cursor-grabbing"
               onTouchStart={onTouchStart}

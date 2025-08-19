@@ -16,11 +16,8 @@ export default function DeleteModal({ isOpen, onClose, onConfirm, loading, title
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl p-6 max-w-md w-full">
         <h2 className="text-xl font-bold mb-4">Supprimer cette annonce ?</h2>
-        <p className="text-gray-600 mb-2">
-          Vous êtes sur le point de supprimer "{title}".
-        </p>
         <p className="text-gray-600 mb-6">
-          Cette action est irréversible.
+          Cette action est définitive. Les photos associées seront supprimées du stockage. Confirmez-vous la suppression ?
         </p>
         <div className="flex gap-3">
           <button
