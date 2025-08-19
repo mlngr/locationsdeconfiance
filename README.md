@@ -1,4 +1,4 @@
-# LokSecure – Base propre (Next.js App Router + Tailwind + Supabase)
+# Locations de confiance – Base propre (Next.js App Router + Tailwind + Supabase)
 
 Aucune dépendance Radix/shadcn. Images locales. Auth & annonces en client-side pour simplicité.
 

@@ -18,7 +18,7 @@ export default function Home() {
           </div>
         </div>
         <div className="rounded-2xl overflow-hidden shadow-lg">
-          <Image src="/assets/hero.png" alt="LokSecure" width={1200} height={640} priority />
+          <Image src="/assets/hero.png" alt="Locations de confiance" width={1200} height={640} priority />
         </div>
       </section>
 
