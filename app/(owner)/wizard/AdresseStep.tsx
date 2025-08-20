@@ -46,7 +46,7 @@ export default function AdresseStep() {
         postalCode,
       },
     });
-    router.push("/wizard/photos");
+    router.push("/wizard/details");
   }
 
   return (

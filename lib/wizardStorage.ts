@@ -8,9 +8,27 @@ export type AddressStepData = {
   postalCode?: string;
 };
 
+export type DetailsStepData = {
+  propertyType: string; // Appartement, Maison, Studio, Autre
+  surface: number; // m², > 0
+  rooms: number; // >= 1
+  furnished: boolean;
+  floor?: number; // >= 0 or empty if RDC
+  elevator: boolean;
+};
+
+export type LoyerStepData = {
+  rent: number; // >= 0
+  charges: number; // >= 0
+  deposit: number; // >= 0
+};
+
 export type WizardState = {
   address?: AddressStepData;
-  photos?: string[]; // URLs uploadées
+  details?: DetailsStepData;
+  loyer?: LoyerStepData;
+  photosCount?: number; // For step status, actual files in wizardVolatile
+  photos?: string[]; // URLs uploadées (final step)
 };
 
 const KEY = "wizard:create-listing";

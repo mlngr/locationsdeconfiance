@@ -112,7 +112,7 @@ export default function DashboardPage() {
           <div className="space-y-6">
             <div className="space-y-3">
               <p className="text-gray-700">Publiez et gérez vos annonces, suivez vos loyers et paiements.</p>
-              <Link href="/properties/new" className="btn btn-primary">Nouvelle annonce</Link>
+              <Link href="/wizard/adresse" className="btn btn-primary">Nouvelle annonce</Link>
             </div>
             
             <div>
