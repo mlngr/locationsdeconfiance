@@ -1,18 +1,28 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BanAutocomplete, BanSelection } from "@/components/address/BanAutocomplete";
 import { loadWizard, saveWizard } from "@/lib/wizardStorage";
 
 export default function AdresseStep() {
   const router = useRouter();
-  const existing = typeof window !== "undefined" ? loadWizard() : {};
-  const [addressInput, setAddressInput] = useState(existing.address?.addressLabel ?? "");
-  const [selected, setSelected] = useState<BanSelection | null>(existing.address ?? null);
-  const [city, setCity] = useState(existing.address?.city ?? "");
-  const [postalCode, setPostalCode] = useState(existing.address?.postalCode ?? "");
+  const [addressInput, setAddressInput] = useState("");
+  const [selected, setSelected] = useState<BanSelection | null>(null);
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [err, setErr] = useState<string | undefined>();
+
+  // Load data from localStorage after hydration
+  useEffect(() => {
+    const existing = loadWizard();
+    if (existing.address) {
+      setAddressInput(existing.address.addressLabel ?? "");
+      setSelected(existing.address);
+      setCity(existing.address.city ?? "");
+      setPostalCode(existing.address.postalCode ?? "");
+    }
+  }, []);
 
   const needCP = selected && (selected.banType === "municipality" || selected.banType === "locality");
   const canContinue = !!selected?.banId && (!needCP || postalCode.length === 5);
@@ -36,7 +46,7 @@ export default function AdresseStep() {
         postalCode,
       },
     });
-    router.push("/owner/wizard/photos");
+    router.push("/wizard/photos");
   }
 
   return (
