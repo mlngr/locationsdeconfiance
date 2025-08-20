@@ -4,15 +4,17 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import NavBar from "@/components/NavBar";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import DpeBadge from "@/components/DpeBadge";
 import Image from "next/image";
 import Link from "next/link";
 import DeleteModal from "@/components/DeleteModal";
 import { deletePhotos, getStoragePathFromUrl } from "@/lib/storage";
+import { Property } from "@/types";
 
 export default function PropertyDetail() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [p, setP] = useState<any>(null);
+  const [p, setP] = useState<Property | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -117,6 +119,7 @@ export default function PropertyDetail() {
 
   const isOwner = currentUser?.id === p.owner_id;
   const photos = p.photos || [];
+  const priceCC = p.price + (p.charges || 0);
 
   return (
     <main>
@@ -129,12 +132,56 @@ export default function PropertyDetail() {
           ]}
         />
         <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">{p.title}</h1>
-            <p className="text-gray-600">{p.city} {p.postal_code && `(${p.postal_code})`} • <span className="font-semibold">{p.price} €/mois</span></p>
+          <div className="flex-1">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold mb-2">{p.title}</h1>
+                <div className="flex flex-wrap items-center gap-4 text-gray-600">
+                  <span>{p.city} {p.postal_code && `(${p.postal_code})`}</span>
+                  {p.property_type && (
+                    <>
+                      <span>•</span>
+                      <span className="capitalize">{p.property_type}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              {/* DPE Badge */}
+              {p.dpe_rating && (
+                <div className="flex flex-col items-center">
+                  <DpeBadge rating={p.dpe_rating} size="lg" />
+                  <span className="text-xs text-gray-500 mt-1">DPE</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Pricing */}
+            <div className="bg-gray-50 rounded-xl p-4 mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-3xl font-bold text-gray-900">
+                  {priceCC.toLocaleString()} €
+                </span>
+                <span className="text-gray-600">CC/mois</span>
+              </div>
+              
+              {p.charges && p.charges > 0 && (
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div className="flex justify-between">
+                    <span>Loyer hors charges :</span>
+                    <span>{p.price.toLocaleString()} €</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Charges :</span>
+                    <span>{p.charges.toLocaleString()} €</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+          
           {isOwner && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 ml-4">
               <Link
                 href={`/properties/${params.id}/edit`}
                 className="btn btn-outline"
@@ -233,7 +280,27 @@ export default function PropertyDetail() {
           </div>
         )}
         
-        <div className="mt-6 whitespace-pre-wrap text-gray-800">{p.description}</div>
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Description</h2>
+          <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">{p.description}</div>
+        </div>
+
+        {/* Additional Information */}
+        {(p.address_label || p.lat) && (
+          <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-blue-900 mb-3">Informations de localisation</h3>
+            {p.address_label && (
+              <p className="text-blue-800 mb-2">
+                <strong>Adresse :</strong> {p.address_label}
+              </p>
+            )}
+            {p.lat && p.lng && (
+              <p className="text-sm text-blue-700">
+                Coordonnées : {p.lat.toFixed(6)}, {p.lng.toFixed(6)}
+              </p>
+            )}
+          </div>
+        )}
       </div>
       
       <DeleteModal
