@@ -116,6 +116,59 @@ create index if not exists properties_owner_created_idx on properties (owner_id,
 create index if not exists properties_created_idx on properties (created_at desc);
 ```
 
+## Wizard et adresse (BAN)
+
+### Migrations supplémentaires pour le wizard
+
+```sql
+-- Nouveau champs pour le wizard
+alter table properties add column if not exists property_type text;
+alter table properties add constraint properties_property_type_check 
+  check (property_type in ('maison', 'appartement', 'parking'));
+
+-- Champs d'adresse enrichis (BAN API)
+alter table properties add column if not exists address_label text;
+alter table properties add column if not exists address_line1 text;
+alter table properties add column if not exists insee_code text;
+alter table properties add column if not exists lat double precision;
+alter table properties add column if not exists lng double precision;
+alter table properties add column if not exists address_provider text default 'ban';
+alter table properties add column if not exists address_provider_id text;
+
+-- Prix détaillé avec calcul automatique
+alter table properties add column if not exists rent_base numeric(10,2) not null default 0;
+alter table properties add column if not exists rent_charges numeric(10,2) not null default 0;
+alter table properties add column if not exists rent_cc numeric(10,2) 
+  generated always as (coalesce(rent_base,0) + coalesce(rent_charges,0)) stored;
+
+-- DPE (Diagnostic de Performance Énergétique)
+alter table properties add column if not exists dpe_rating char(1);
+alter table properties add constraint properties_dpe_rating_check 
+  check (dpe_rating in ('A','B','C','D','E','F','G'));
+
+-- Contact information
+alter table properties add column if not exists contact_name text;
+alter table properties add column if not exists contact_email text;
+alter table properties add column if not exists contact_phone text;
+
+-- Mode brouillon
+alter table properties add column if not exists is_draft boolean not null default true;
+
+-- Index pour les nouveaux filtres et tri
+create index if not exists properties_property_type_idx on properties (property_type);
+create index if not exists properties_rent_cc_idx on properties (rent_cc);
+create index if not exists properties_postal_code_idx on properties (postal_code);
+create index if not exists properties_is_draft_idx on properties (is_draft);
+
+-- Mise à jour des politiques RLS pour inclure le mode brouillon
+drop policy if exists "anyone can read properties" on properties;
+create policy "anyone can read published properties"
+on properties for select using (is_draft = false);
+
+create policy "owner can read own drafts"
+on properties for select using (auth.uid() = owner_id);
+```
+
 ## À venir
 - Paiement Stripe (2% commission) via `/api/checkout` + Connect
 - Favoris & édition (peuvent être ajoutés ensuite)
