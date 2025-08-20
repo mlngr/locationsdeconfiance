@@ -15,6 +15,28 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
+## Mobile First Considerations
+
+### Property Creation Wizard
+- **Multi-step wizard**: Address → Details → Photos → Review
+- **Mobile stepper**: Horizontal progress header on ≤768px viewports
+- **Desktop stepper**: Sidebar navigation with step validation
+- **Touch-friendly actions**: Sticky bottom action bar with 44px+ touch targets
+- **iOS compatibility**: 16px font-size prevents zoom, safe area insets supported
+
+### Address (BAN) Behavior
+- **API Integration**: French national address API (api-adresse.data.gouv.fr)
+- **Debouncing**: 250ms delay with request cancellation for performance
+- **Validation**: Server-side BAN ID validation on form submission
+- **Accessibility**: Full keyboard navigation (↑↓ + Enter), ARIA roles, screen reader support
+- **Auto-selection**: Enter key selects first suggestion if none explicitly chosen
+
+### Responsive Design
+- **Viewport handling**: 100dvh with fallbacks for mobile browsers
+- **Keyboard overlay**: Layout stability when virtual keyboard appears
+- **Input optimization**: Prevents iOS zoom with 16px minimum font-size
+- **Touch targets**: All interactive elements ≥44px for accessibility
+
 ## SQL Supabase
 ```sql
 create table if not exists properties (
@@ -111,10 +133,38 @@ alter table properties drop constraint if exists properties_photos_max6;
 alter table properties add constraint properties_photos_max6
   check (array_length(photos, 1) is null or array_length(photos, 1) <= 6);
 
+-- Enhanced property fields for advanced features
+alter table properties add column if not exists address_label text;
+alter table properties add column if not exists charges numeric default 0;
+alter table properties add column if not exists property_type text default 'appartement';
+alter table properties add column if not exists dpe_rating text;
+alter table properties add column if not exists lat numeric;
+alter table properties add column if not exists lng numeric;
+
 -- Index recommandés
 create index if not exists properties_owner_created_idx on properties (owner_id, created_at desc);
 create index if not exists properties_created_idx on properties (created_at desc);
+create index if not exists properties_type_idx on properties (property_type);
+create index if not exists properties_postal_idx on properties (postal_code);
+create index if not exists properties_price_idx on properties (price);
 ```
+
+## Test mobile sur réseau local
+
+Pour tester sur un appareil mobile via LAN :
+
+1. Démarrez le serveur : `npm run dev`
+2. Trouvez l'IP locale : `ip addr show` (Linux) ou `ipconfig` (Windows)
+3. Accédez depuis mobile : `http://[IP_LOCALE]:3000`
+4. Testez les fonctionnalités tactiles, le zoom iOS, et la saisie d'adresse
+
+### Vérification des fonctionnalités clés
+- [ ] Assistant de création d'annonce (4 étapes)
+- [ ] Saisie d'adresse avec suggestions BAN
+- [ ] Navigation tactile (barre d'action collante)
+- [ ] Filtres de recherche avec synchronisation URL
+- [ ] Affichage des badges DPE et prix CC
+- [ ] Rotation portrait/paysage
 
 ## À venir
 - Paiement Stripe (2% commission) via `/api/checkout` + Connect
