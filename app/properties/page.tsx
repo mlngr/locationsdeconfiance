@@ -29,7 +29,10 @@ export default function PropertiesPage() {
     <main className="container py-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Annonces</h1>
-        <Link href="/properties/new" className="btn btn-primary">Ajouter une annonce</Link>
+        <div className="flex gap-2">
+          <Link href="/owner/wizard/adresse" className="btn btn-primary">Assistant création</Link>
+          <Link href="/properties/new" className="btn btn-outline">Formulaire classique</Link>
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-6">
         <input className="input md:col-span-2" placeholder="Rechercher..." value={q} onChange={e=>setQ(e.target.value)}/>
