@@ -1,140 +1,204 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-type BanFeature = {
-  properties: {
-    id: string;
-    type: "housenumber" | "street" | "locality" | "municipality" | string;
-    label: string;
-    city?: string;
-    postcode?: string;
-  };
-};
+type BanType = "housenumber" | "street" | "locality" | "municipality" | string;
 
-const ACCEPTED_TYPES = new Set(["housenumber", "street", "locality", "municipality"]);
-
-export type BanSelection = {
+export type BanSelectPayload = {
   banId: string;
-  banType: string;
+  banType: BanType;
   addressLabel: string;
   city?: string;
   postalCode?: string;
 };
 
-export function BanAutocomplete({
-  value,
-  onChange,
-  onSelect,
-  setError,
-  placeholder = "Saisir une adresse ou une ville",
-  autoFocus,
-}: {
-  value: string;
-  onChange: (s: string) => void;
-  onSelect: (sel: BanSelection) => void;
+type Suggestion = {
+  id: string;
+  type: BanType;
+  label: string;
+  city?: string;
+  postcode?: string;
+};
+
+function useDebounced<T>(value: T, delay = 200) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+
+interface BanAutocompleteProps {
+  onSelect: (v: BanSelectPayload) => void;
   setError?: (msg?: string) => void;
   placeholder?: string;
-  autoFocus?: boolean;
-}) {
-  const [q, setQ] = useState(value);
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<BanFeature[]>([]);
-  const abortRef = useRef<AbortController | null>(null);
-  const debounceRef = useRef<number | null>(null);
+  className?: string;
+  defaultQuery?: string;
+}
 
-  useEffect(() => setQ(value), [value]);
+export default function BanAutocomplete({
+  onSelect,
+  setError,
+  placeholder = "Saisissez une adresse (ex: 1 rue de la Paix Paris)",
+  className,
+  defaultQuery = "",
+}: BanAutocompleteProps) {
+  const [query, setQuery] = useState(defaultQuery);
+  const [loading, setLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const listRef = useRef<HTMLUListElement | null>(null);
+
+  const debounced = useDebounced(query, 200);
 
   useEffect(() => {
-    if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    debounceRef.current = window.setTimeout(() => {
-      fetchSuggestions(q);
-    }, 200);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q]);
-
-  function fetchSuggestions(term: string) {
-    if (!term || term.trim().length < 3) {
-      setSuggestions([]);
-      return;
+    let aborted = false;
+    async function run() {
+      const q = debounced.trim();
+      if (!q) {
+        setSuggestions([]);
+        setOpen(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const url = `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(
+          q
+        )}&autocomplete=1&limit=8`;
+        const res = await fetch(url);
+        const json = await res.json();
+        if (aborted) return;
+        const list: Suggestion[] =
+          (json?.features || []).map((f: any) => {
+            const p = f?.properties || {};
+            return {
+              id: String(p.id ?? f.id ?? p.citycode ?? p.name ?? p.label ?? ""),
+              type: String(p.type ?? ""),
+              label: String(p.label ?? p.name ?? ""),
+              city: p.city ? String(p.city) : undefined,
+              postcode: p.postcode ? String(p.postcode) : undefined,
+            } as Suggestion;
+          }) ?? [];
+        setSuggestions(list);
+        setOpen(list.length > 0);
+        setActiveIndex(-1);
+      } catch (_e) {
+        if (!aborted) {
+          setSuggestions([]);
+          setOpen(false);
+        }
+      } finally {
+        if (!aborted) setLoading(false);
+      }
     }
-    abortRef.current?.abort();
-    const ctrl = new AbortController();
-    abortRef.current = ctrl;
-    setLoading(true);
-    fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(term)}&limit=8&autocomplete=1`, {
-      signal: ctrl.signal,
-    })
-      .then((r) => r.json())
-      .then((json) => {
-        const feats: BanFeature[] = (json?.features || []).filter(
-          (f: any) => ACCEPTED_TYPES.has(f?.properties?.type)
-        );
-        setSuggestions(feats);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }
+    run();
+    return () => {
+      aborted = true;
+    };
+  }, [debounced]);
 
-  function pick(f: BanFeature) {
-    if (!ACCEPTED_TYPES.has(f.properties.type)) {
-      setError?.("Type d’adresse non supporté. Choisissez une adresse ou une ville.");
-      return;
-    }
+  const acceptTypes = useMemo<BanType[]>(
+    () => ["housenumber", "street", "locality", "municipality"],
+    []
+  );
+
+  function handleSelect(s: Suggestion) {
+    if (!s || !s.id) return;
+    if (setError) setError(undefined);
     onSelect({
-      banId: f.properties.id,
-      banType: f.properties.type,
-      addressLabel: f.properties.label,
-      city: f.properties.city,
-      postalCode: f.properties.postcode,
+      banId: s.id,
+      banType: s.type,
+      addressLabel: s.label,
+      city: s.city,
+      postalCode: s.postcode,
     });
-    onChange(f.properties.label);
-    setQ(f.properties.label);
-    setError?.(undefined);
     setOpen(false);
+    setSuggestions([]);
+    setActiveIndex(-1);
+    setQuery(s.label);
+    inputRef.current?.blur();
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (suggestions[0]) pick(suggestions[0]);
+    if (!open || suggestions.length === 0) {
+      if (e.key === "Enter" && query.trim().length > 0) {
+        e.preventDefault();
+      }
+      return;
     }
-    if (e.key === "Escape") setOpen(false);
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % suggestions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => (i - 1 + suggestions.length) % suggestions.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const idx = activeIndex >= 0 ? activeIndex : 0;
+      const s = suggestions[idx];
+      if (s && (acceptTypes.length === 0 || acceptTypes.includes(s.type))) {
+        handleSelect(s);
+      }
+    } else if (e.key === "Escape") {
+      setOpen(false);
+      setSuggestions([]);
+      setActiveIndex(-1);
+    }
   }
 
   return (
-    <div className="relative">
+    <div className={`relative ${className ?? ""}`}>
       <input
-        className="input"
-        value={q}
-        onChange={(e) => {
-          setQ(e.target.value);
-          onChange(e.target.value);
-          setOpen(true);
+        ref={inputRef}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => {
+          if (suggestions.length > 0) setOpen(true);
         }}
-        onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        autoFocus={autoFocus}
+        className="input input-bordered w-full"
+        autoComplete="off"
+        inputMode="search"
       />
-      {open && (suggestions.length > 0 || loading) && (
-        <div className="absolute z-20 mt-1 w-full max-h-64 overflow-auto rounded-md border bg-white shadow">
-          {loading && <div className="px-3 py-2 text-sm text-gray-500">Recherche…</div>}
-          {suggestions.map((s) => (
-            <button
-              key={s.properties.id}
-              type="button"
-              className="block w-full text-left px-3 py-2 hover:bg-gray-50"
-              onClick={() => pick(s)}
-            >
-              {s.properties.label}
-            </button>
-          ))}
-          {!loading && suggestions.length === 0 && (
-            <div className="px-3 py-2 text-sm text-gray-500">Aucun résultat</div>
+      {open && suggestions.length > 0 && (
+        <ul
+          ref={listRef}
+          className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-72 overflow-auto"
+          role="listbox"
+        >
+          {suggestions.map((s, idx) => {
+            const active = idx === activeIndex;
+            const allowed = acceptTypes.includes(s.type);
+            return (
+              <li
+                key={`${s.id}-${idx}`}
+                role="option"
+                aria-selected={active}
+                className={`px-3 py-2 cursor-pointer ${
+                  active ? "bg-gray-100" : ""
+                } ${!allowed ? "opacity-60" : ""}`}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  if (allowed) handleSelect(s);
+                }}
+                title={!allowed ? `Type non supporté: ${s.type}` : undefined}
+              >
+                <div className="text-sm">{s.label}</div>
+                <div className="text-xs text-gray-500">
+                  {s.type}
+                  {s.city ? ` • ${s.city}` : ""} {s.postcode ? `(${s.postcode})` : ""}
+                </div>
+              </li>
+            );
+          })}
+          {loading && (
+            <li className="px-3 py-2 text-sm text-gray-500">Chargement…</li>
           )}
-        </div>
+        </ul>
       )}
     </div>
   );

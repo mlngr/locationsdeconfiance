@@ -15,22 +15,26 @@ export type WizardState = {
 
 const KEY = "wizard:create-listing";
 
-export function loadWizard(): WizardState {
+export function getWizard(): WizardState {
+  if (typeof window === "undefined") return {};
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : {};
+    if (!raw) return {};
+    return JSON.parse(raw) as WizardState;
   } catch {
     return {};
   }
 }
 
-export function saveWizard(partial: Partial<WizardState>) {
-  const curr = loadWizard();
-  const next = { ...curr, ...partial };
+export function saveWizard(patch: Partial<WizardState>) {
+  if (typeof window === "undefined") return;
+  const current = getWizard();
+  const next = { ...current, ...patch };
   localStorage.setItem(KEY, JSON.stringify(next));
   return next;
 }
 
-export function clearWizard() {
+export function resetWizard() {
+  if (typeof window === "undefined") return;
   localStorage.removeItem(KEY);
 }
