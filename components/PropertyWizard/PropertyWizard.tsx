@@ -10,6 +10,7 @@ import AddressStep from './steps/AddressStep';
 import CharacteristicsStep from './steps/CharacteristicsStep';
 import EnergyStep from './steps/EnergyStep';
 import PhotosStep from './steps/PhotosStep';
+import DescriptionStep from './steps/DescriptionStep';
 import PriceStep from './steps/PriceStep';
 import ContactStep from './steps/ContactStep';
 
@@ -19,6 +20,7 @@ const wizardSteps: WizardStep[] = [
   { id: 'characteristics', title: 'Caractéristiques', description: 'Titre et description', isCompleted: false, isActive: false },
   { id: 'energy', title: 'Bilan énergétique', description: 'DPE A à G', isCompleted: false, isActive: false },
   { id: 'photos', title: 'Photos', description: 'Images du bien', isCompleted: false, isActive: false },
+  { id: 'description', title: 'Description', description: 'Description détaillée', isCompleted: false, isActive: false },
   { id: 'price', title: 'Prix de location', description: 'Loyer et charges', isCompleted: false, isActive: false },
   { id: 'contact', title: 'Contact', description: 'Vos coordonnées', isCompleted: false, isActive: false }
 ];
@@ -318,6 +320,14 @@ export default function PropertyWizard({ draftId }: PropertyWizardProps) {
           <PhotosStep
             value={propertyData.photos_files}
             onChange={(value) => handleStepChange('photos_files', value)}
+            error={stepError}
+          />
+        );
+      case 'description':
+        return (
+          <DescriptionStep
+            value={propertyData}
+            onChange={(data) => setPropertyData(prev => ({ ...prev, ...data }))}
             error={stepError}
           />
         );

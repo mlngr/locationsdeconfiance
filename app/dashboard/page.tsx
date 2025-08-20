@@ -9,6 +9,7 @@ import DeleteModal from "@/components/DeleteModal";
 import { deletePhotos, getStoragePathFromUrl } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import DpeBadge from "@/components/DpeBadge";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function DashboardPage() {
       setRole((user.user_metadata as any)?.role ?? "owner");
 
       if ((user.user_metadata as any)?.role === "owner" || !(user.user_metadata as any)?.role) {
-        // Fetch user's properties
+        // Fetch user's properties (including drafts)
         const { data } = await supabase
           .from("properties")
           .select("*")
@@ -153,8 +154,41 @@ export default function DashboardPage() {
                           )}
                         </div>
                         <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
+                        
+                        {/* Property type and DPE badges */}
+                        <div className="flex gap-2 mb-2">
+                          {property.property_type && (
+                            <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded capitalize">
+                              {property.property_type}
+                            </span>
+                          )}
+                          {property.dpe_rating && (
+                            <DpeBadge rating={property.dpe_rating} />
+                          )}
+                          {property.is_draft && (
+                            <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
+                              Brouillon
+                            </span>
+                          )}
+                        </div>
+                        
                         <p className="text-gray-600 text-sm mb-2">{property.city} {property.postal_code && `(${property.postal_code})`}</p>
-                        <p className="font-bold text-lg mb-4">{property.price} €/mois</p>
+                        
+                        {/* Price display with rent breakdown if available */}
+                        <div className="mb-4">
+                          {property.rent_cc && property.rent_cc > 0 ? (
+                            <div>
+                              <p className="font-bold text-lg">{property.rent_cc} €/mois CC</p>
+                              {property.rent_base && (
+                                <p className="text-sm text-gray-500">
+                                  {property.rent_base} € + {(property.rent_charges || 0)} € charges
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="font-bold text-lg">{property.price} €/mois</p>
+                          )}
+                        </div>
                         <div className="flex gap-2">
                           <Link
                             href={`/properties/${property.id}`}
