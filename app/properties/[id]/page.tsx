@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import NavBar from "@/components/NavBar";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Image from "next/image";
@@ -22,6 +22,14 @@ export default function PropertyDetail() {
 
   useEffect(() => {
     (async () => {
+      // If Supabase is not configured, show placeholder property
+      if (!isSupabaseConfigured() || !supabase) {
+        console.warn("Supabase not configured. Cannot load property details.");
+        setP(null);
+        setCurrentUser(null);
+        return;
+      }
+
       const { data } = await supabase.from("properties").select("*").eq("id", params.id).single();
       setP(data || null);
       
@@ -31,6 +39,12 @@ export default function PropertyDetail() {
   }, [params.id]);
 
   const handleDelete = async () => {
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured() || !supabase) {
+      alert("La base de données n'est pas configurée. Impossible de supprimer l'annonce.");
+      return;
+    }
+
     setDeleteLoading(true);
     try {
       // First, delete all photos from storage

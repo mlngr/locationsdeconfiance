@@ -1,7 +1,11 @@
 "use client";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export async function uploadPhotos(files: File[], ownerId: string, propertyId?: string) {
+  if (!isSupabaseConfigured() || !supabase) {
+    throw new Error("Storage service not configured");
+  }
+
   const bucket = "properties";
   const urls: string[] = [];
   const paths: string[] = [];
@@ -25,6 +29,11 @@ export async function uploadPhotos(files: File[], ownerId: string, propertyId?: 
 }
 
 export async function deletePhotos(photoPaths: string[]) {
+  if (!isSupabaseConfigured() || !supabase) {
+    console.warn("Storage service not configured. Cannot delete photos.");
+    return;
+  }
+
   const bucket = "properties";
   const { error } = await supabase.storage.from(bucket).remove(photoPaths);
   if (error) {
@@ -36,6 +45,7 @@ export async function deletePhotos(photoPaths: string[]) {
 // Extract storage path from public URL
 export function getStoragePathFromUrl(publicUrl: string): string {
   const bucket = "properties";
-  const bucketUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${bucket}/`;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const bucketUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/`;
   return publicUrl.replace(bucketUrl, "");
 }

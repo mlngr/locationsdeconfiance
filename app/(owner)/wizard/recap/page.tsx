@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { loadWizard, saveWizard, clearWizard, WizardState } from "@/lib/wizardStorage";
 import { getVolatileFiles, clearVolatileFiles } from "@/lib/wizardVolatile";
 import { uploadPhotos } from "@/lib/storage";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import StepsNav from "@/components/wizard/StepsNav";
 import Image from "next/image";
 
@@ -86,6 +86,12 @@ export default function RecapStep() {
   const onPublish = async () => {
     if (!wizardState.address || !wizardState.details || !wizardState.pricing) {
       setErr("Données incomplètes. Veuillez vérifier tous les steps.");
+      return;
+    }
+
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured() || !supabase) {
+      setErr("La base de données n'est pas configurée. Veuillez contacter l'administrateur.");
       return;
     }
 

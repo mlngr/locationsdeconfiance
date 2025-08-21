@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import NavBar from "@/components/NavBar";
 
 export default function WizardOwnerLayout({ children }: { children: React.ReactNode }) {
@@ -11,6 +11,14 @@ export default function WizardOwnerLayout({ children }: { children: React.ReactN
 
   useEffect(() => {
     (async () => {
+      // If Supabase is not configured, redirect to home page with a message
+      if (!isSupabaseConfigured() || !supabase) {
+        console.warn("Supabase not configured. Redirecting to home page.");
+        router.replace("/");
+        setChecking(false);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
 
       // Guard: redirect unauthenticated users to login

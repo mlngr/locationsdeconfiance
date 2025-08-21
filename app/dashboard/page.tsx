@@ -2,7 +2,7 @@
 import NavBar from "@/components/NavBar";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Property } from "@/types";
 import Image from "next/image";
 import DeleteModal from "@/components/DeleteModal";
@@ -25,6 +25,14 @@ export default function DashboardPage() {
 
   useEffect(() => {
     (async () => {
+      // If Supabase is not configured, redirect to home page
+      if (!isSupabaseConfigured() || !supabase) {
+        console.warn("Supabase not configured. Redirecting to home page.");
+        router.replace("/");
+        setLoading(false);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
 
       // Guard: redirect unauthenticated users
@@ -60,6 +68,12 @@ export default function DashboardPage() {
 
   const handleDeleteProperty = async () => {
     if (!propertyToDelete || !userId) return;
+
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured() || !supabase) {
+      alert("La base de données n'est pas configurée. Impossible de supprimer l'annonce.");
+      return;
+    }
 
     setDeleteLoading(true);
     try {

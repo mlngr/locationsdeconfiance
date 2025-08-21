@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import Image from "next/image";
 import { Property } from "@/types";
 
@@ -11,6 +11,13 @@ export default function PropertiesPage() {
 
   useEffect(() => {
     (async () => {
+      // If Supabase is not configured, show empty list
+      if (!isSupabaseConfigured() || !supabase) {
+        console.warn("Supabase not configured. Properties list will be empty.");
+        setList([]);
+        return;
+      }
+
       const { data } = await supabase.from("properties").select("*").order("created_at", { ascending: false });
       setList((data as any) || []);
     })();

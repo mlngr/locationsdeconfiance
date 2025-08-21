@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useRouter, useParams } from "next/navigation";
 import { uploadPhotos, deletePhotos, getStoragePathFromUrl } from "@/lib/storage";
 import NavBar from "@/components/NavBar";
@@ -23,6 +23,13 @@ export default function EditPropertyPage() {
 
   useEffect(() => {
     (async () => {
+      // Check if Supabase is configured
+      if (!isSupabaseConfigured() || !supabase) {
+        console.warn("Supabase not configured. Redirecting to home page.");
+        router.push("/");
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push("/login");
@@ -54,6 +61,13 @@ export default function EditPropertyPage() {
     e.preventDefault();
     setLoading(true);
     setErr(undefined);
+
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured() || !supabase) {
+      setErr("La base de données n'est pas configurée. Veuillez contacter l'administrateur.");
+      setLoading(false);
+      return;
+    }
 
     // Validate postal code (5 digits)
     if (!/^\d{5}$/.test(postalCode)) {
@@ -105,6 +119,12 @@ export default function EditPropertyPage() {
 
   const handleRemovePhoto = async (index: number) => {
     if (!property || !property.photos) return;
+    
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured() || !supabase) {
+      setErr("La base de données n'est pas configurée. Impossible de supprimer la photo.");
+      return;
+    }
     
     setDeletingPhotoIndex(index);
     try {
