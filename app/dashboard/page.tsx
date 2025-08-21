@@ -25,23 +25,34 @@ export default function DashboardPage() {
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setUserId(user.id);
-      setRole((user.user_metadata as any)?.role ?? "owner");
-
-      if ((user.user_metadata as any)?.role === "owner" || !(user.user_metadata as any)?.role) {
-        // Fetch user's properties
-        const { data } = await supabase
-          .from("properties")
-          .select("*")
-          .eq("owner_id", user.id)
-          .order("created_at", { ascending: false });
-        
-        setProperties((data as Property[]) || []);
+      
+      // Redirect unauthenticated users to login
+      if (!user) {
+        router.push("/login");
+        return;
       }
+      
+      setUserId(user.id);
+      const userRole = (user.user_metadata as any)?.role ?? "owner";
+      setRole(userRole);
+
+      // Redirect non-owners to home page
+      if (userRole !== "owner") {
+        router.push("/");
+        return;
+      }
+
+      // Fetch user's properties (only for owners)
+      const { data } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("owner_id", user.id)
+        .order("created_at", { ascending: false });
+      
+      setProperties((data as Property[]) || []);
       setLoading(false);
     })();
-  }, []);
+  }, [router]);
 
   const handleDeleteProperty = async () => {
     if (!propertyToDelete) return;
@@ -79,16 +90,15 @@ export default function DashboardPage() {
     }
   };
 
-  if (!userId) {
+  if (!userId || loading) {
     return (
       <main>
         <NavBar />
         <div className="container py-12">
-          <h1 className="text-2xl font-semibold">Veuillez vous connecter</h1>
-          <p className="mt-2"><Link className="underline" href="/login">Aller à la page de connexion</Link></p>
+          <div className="text-center">Chargement...</div>
         </div>
       </main>
-    )
+    );
   }
 
   // Pagination logic
@@ -112,7 +122,7 @@ export default function DashboardPage() {
           <div className="space-y-6">
             <div className="space-y-3">
               <p className="text-gray-700">Publiez et gérez vos annonces, suivez vos loyers et paiements.</p>
-              <Link href="/properties/new" className="btn btn-primary">Nouvelle annonce</Link>
+              <Link href="/wizard/adresse" className="btn btn-primary">Nouvelle annonce</Link>
             </div>
             
             <div>
@@ -125,7 +135,7 @@ export default function DashboardPage() {
                   <div className="max-w-md mx-auto">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune annonce</h3>
                     <p className="text-gray-600 mb-4">Vous n'avez pas encore créé d'annonce. Commencez dès maintenant !</p>
-                    <Link href="/properties/new" className="btn btn-primary">
+                    <Link href="/wizard/adresse" className="btn btn-primary">
                       Créer une annonce
                     </Link>
                   </div>
