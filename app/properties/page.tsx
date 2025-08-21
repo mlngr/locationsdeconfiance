@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import Image from "next/image";
 import { Property } from "@/types";
+import NavBar from "@/components/NavBar";
 
 export default function PropertiesPage() {
   const [list, setList] = useState<Property[]>([]);
@@ -33,7 +34,9 @@ export default function PropertiesPage() {
   }, [list, q, city, min, max]);
 
   return (
-    <main className="container py-8">
+    <main>
+      <NavBar />
+      <div className="container py-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Annonces</h1>
         <Link href="/properties/new" className="btn btn-primary">Ajouter une annonce</Link>
@@ -56,6 +59,7 @@ export default function PropertiesPage() {
             <p className="text-sm text-gray-500">{p.city}</p>
           </a>
         ))}
+      </div>
       </div>
     </main>
   );
