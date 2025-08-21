@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import NavBar from "@/components/NavBar";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Image from "next/image";
 import Link from "next/link";
@@ -109,18 +108,14 @@ export default function PropertyDetail() {
   }, [p]);
 
   if (!p) return (
-    <main>
-      <NavBar/>
-      <div className="container py-12">Chargement...</div>
-    </main>
+    <div className="container py-12">Chargement...</div>
   );
 
   const isOwner = currentUser?.id === p.owner_id;
   const photos = p.photos || [];
 
   return (
-    <main>
-      <NavBar/>
+    <>
       <div className="container py-8 max-w-4xl">
         <Breadcrumbs
           items={[
@@ -243,6 +238,6 @@ export default function PropertyDetail() {
         loading={deleteLoading}
         title={p.title}
       />
-    </main>
+    </>
   );
 }

@@ -1,11 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 
 export default function Home() {
   return (
-    <main>
-      <NavBar />
+    <div>
 
       {/* Hero */}
       <section className="container py-16 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center">
@@ -52,6 +50,6 @@ export default function Home() {
           </div>
         ))}
       </section>
-    </main>
+    </div>
   );
 }

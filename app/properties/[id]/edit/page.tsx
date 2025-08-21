@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useParams } from "next/navigation";
 import { uploadPhotos, deletePhotos, getStoragePathFromUrl } from "@/lib/storage";
-import NavBar from "@/components/NavBar";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { Property } from "@/types";
 
@@ -138,17 +137,12 @@ export default function EditPropertyPage() {
 
   if (!property) {
     return (
-      <main>
-        <NavBar />
-        <div className="container py-12">Chargement...</div>
-      </main>
+      <div className="container py-12">Chargement...</div>
     );
   }
 
   return (
-    <main>
-      <NavBar />
-      <div className="container py-10 max-w-2xl">
+    <div className="container py-10 max-w-2xl">
         <Breadcrumbs
           items={[
             { label: "Dashboard", href: "/dashboard" },
@@ -261,6 +255,5 @@ export default function EditPropertyPage() {
           </div>
         </form>
       </div>
-    </main>
   );
 }

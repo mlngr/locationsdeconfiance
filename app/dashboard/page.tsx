@@ -1,5 +1,4 @@
 "use client";
-import NavBar from "@/components/NavBar";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -101,8 +100,7 @@ export default function DashboardPage() {
   const totalPages = Math.ceil(properties.length / propertiesPerPage);
 
   return (
-    <main>
-      <NavBar />
+    <>
       <div className="container py-12 space-y-6">
         <Breadcrumbs
           items={[
@@ -264,6 +262,6 @@ export default function DashboardPage() {
         loading={deleteLoading}
         title={propertyToDelete?.title || ""}
       />
-    </main>
+    </>
   );
 }

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import NavBar from "@/components/NavBar";
 
 export default function WizardOwnerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -35,10 +34,9 @@ export default function WizardOwnerLayout({ children }: { children: React.ReactN
   if (checking) return null;
 
   return (
-    <main>
-      <NavBar />
+    <div>
       {/* Owner-only wizard layout */}
       {children}
-    </main>
+    </div>
   );
 }

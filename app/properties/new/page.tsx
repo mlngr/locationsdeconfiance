@@ -3,7 +3,6 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { uploadPhotos } from "@/lib/storage";
-import NavBar from "@/components/NavBar";
 
 export default function NewPropertyPage() {
   const [title,setTitle]=useState(""); const [description,setDescription]=useState("");
@@ -76,9 +75,7 @@ export default function NewPropertyPage() {
   };
 
   return (
-    <main>
-      <NavBar/>
-      <div className="container py-10 max-w-2xl">
+    <div className="container py-10 max-w-2xl">
         <h1 className="text-3xl font-bold">Nouvelle annonce</h1>
         <form onSubmit={onSubmit} className="mt-6 grid gap-4">
           <input className="input" placeholder="Titre" value={title} onChange={e=>setTitle(e.target.value)} required/>
@@ -112,6 +109,5 @@ export default function NewPropertyPage() {
           <button disabled={loading} className="btn btn-primary">{loading ? "Publication..." : "Publier"}</button>
         </form>
       </div>
-    </main>
   );
 }
