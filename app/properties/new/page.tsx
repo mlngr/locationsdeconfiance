@@ -3,7 +3,6 @@ import { useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { uploadPhotos } from "@/lib/storage";
-import NavBar from "@/components/NavBar";
 
 export default function NewPropertyPage() {
   const [title,setTitle]=useState(""); const [description,setDescription]=useState("");
@@ -84,7 +83,6 @@ export default function NewPropertyPage() {
 
   return (
     <main>
-      <NavBar/>
       <div className="container py-10 max-w-2xl">
         <h1 className="text-3xl font-bold">Nouvelle annonce</h1>
         <form onSubmit={onSubmit} className="mt-6 grid gap-4">

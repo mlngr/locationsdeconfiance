@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import NavBar from "@/components/NavBar";
 
 export default function LoginPage() {
   const [email,setEmail]=useState(""); const [password,setPassword]=useState(""); const [err,setErr]=useState<string|undefined>();
@@ -21,7 +20,6 @@ export default function LoginPage() {
   };
   return (
     <main>
-      <NavBar/>
       <div className="container py-12 max-w-md">
         <h1 className="text-3xl font-bold">Connexion</h1>
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
