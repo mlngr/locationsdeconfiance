@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { uploadPhotos } from "@/lib/storage";
 import NavBar from "@/components/NavBar";
@@ -16,6 +16,13 @@ export default function NewPropertyPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true); setErr(undefined);
+    
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured() || !supabase) {
+      setErr("La base de données n'est pas configurée. Veuillez contacter l'administrateur.");
+      setLoading(false);
+      return;
+    }
     
     // Validate postal code (5 digits)
     if (!/^\d{5}$/.test(postalCode)) {

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
 
@@ -9,6 +9,13 @@ export default function LoginPage() {
   const router = useRouter();
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured() || !supabase) {
+      setErr("L'authentification n'est pas configurée. Veuillez contacter l'administrateur.");
+      return;
+    }
+    
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setErr(error.message); else router.push("/dashboard");
   };
