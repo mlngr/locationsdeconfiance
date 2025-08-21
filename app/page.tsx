@@ -22,7 +22,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="container py-12 grid md:grid-cols-3 gap-6">
+      <section className="container py-12 grid md:grid-cols-3 gap-6 mb-20 md:mb-12">
         {[
           { title: "Propriétaires", img: "/assets/owner.png", text: "Créez et gérez vos annonces en quelques clics." },
           { title: "Locataires", img: "/assets/tenant.png", text: "Trouvez le logement idéal et payez en ligne." },
