@@ -1,61 +1,58 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import Image from "next/image";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Property } from "@/types";
 
-export default function PropertiesPage() {
-  const [list, setList] = useState<Property[]>([]);
-  const [q, setQ] = useState(""); const [city, setCity] = useState(""); const [min, setMin] = useState(""); const [max, setMax] = useState("");
+export default function PropertiesIndex() {
+  const [items, setItems] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      // If Supabase is not configured, show empty list
       if (!isSupabaseConfigured() || !supabase) {
-        console.warn("Supabase not configured. Properties list will be empty.");
-        setList([]);
+        setItems([]);
+        setLoading(false);
         return;
       }
-
-      const { data } = await supabase.from("properties").select("*").order("created_at", { ascending: false });
-      setList((data as any) || []);
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!error) setItems((data as Property[]) || []);
+      setLoading(false);
     })();
   }, []);
 
-  const filtered = useMemo(() => {
-    const minN = Number(min || 0); const maxN = Number(max || 1e9);
-    return list.filter(p =>
-      (!q || p.title.toLowerCase().includes(q.toLowerCase()) || p.description.toLowerCase().includes(q.toLowerCase())) &&
-      (!city || p.city.toLowerCase().includes(city.toLowerCase())) &&
-      p.price >= minN && p.price <= maxN
-    );
-  }, [list, q, city, min, max]);
+  if (loading) return <main><div className="container py-12">Chargement...</div></main>;
 
   return (
-    <main className="container py-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Annonces</h1>
-        <Link href="/properties/new" className="btn btn-primary">Ajouter une annonce</Link>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-6">
-        <input className="input md:col-span-2" placeholder="Rechercher..." value={q} onChange={e=>setQ(e.target.value)}/>
-        <input className="input" placeholder="Ville" value={city} onChange={e=>setCity(e.target.value)}/>
-        <input type="number" step={1} className="input" placeholder="Prix min" value={min} onChange={e=>setMin(e.target.value)}/>
-        <input type="number" step={1} className="input" placeholder="Prix max" value={max} onChange={e=>setMax(e.target.value)}/>
-      </div>
-      <div className="grid md:grid-cols-3 gap-6 mt-8">
-        {filtered.map(p => (
-          <a key={p.id} href={"/properties/"+p.id} className="card block hover:shadow-xl transition">
-            <div className="aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden mb-4 flex items-center justify-center">
-              {p.photos?.[0] ? <Image src={p.photos[0]} alt="" width={800} height={450}/> : <Image src="/assets/owner.png" alt="" width={800} height={450}/>}
-            </div>
-            <h3 className="text-xl font-semibold">{p.title}</h3>
-            <p className="text-gray-600 line-clamp-2">{p.description}</p>
-            <p className="mt-2 font-bold">{p.price} €/mois</p>
-            <p className="text-sm text-gray-500">{p.city}</p>
-          </a>
-        ))}
+    <main>
+      <div className="container py-10">
+        <h1 className="text-3xl font-bold mb-6">Annonces</h1>
+        {items.length === 0 ? (
+          <p className="text-gray-600">Aucune annonce pour le moment.</p>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {items.map((p) => (
+              <Link key={p.id} href={`/properties/${p.id}`} className="card block hover:shadow-lg transition">
+                <div className="aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden">
+                  {p.photos?.[0] ? (
+                    <Image src={p.photos[0]} alt={p.title} width={400} height={225} className="w-full h-full object-cover" />
+                  ) : (
+                    <Image src="/assets/tenant.png" alt="Aucune image" width={400} height={225} className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <div className="mt-3">
+                  <h3 className="text-lg font-semibold">{p.title}</h3>
+                  <p className="text-gray-600 text-sm">{p.city} {p.postal_code && `(${p.postal_code})`}</p>
+                  <p className="font-bold">{p.price} € / mois</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </main>
   );

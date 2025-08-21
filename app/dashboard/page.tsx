@@ -1,5 +1,4 @@
 "use client";
-import NavBar from "@/components/NavBar";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
@@ -116,7 +115,6 @@ export default function DashboardPage() {
 
   return (
     <main>
-      <NavBar />
       <div className="container py-12 space-y-6">
         <Breadcrumbs
           items={[
