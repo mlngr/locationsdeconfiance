@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import NavBar from "@/components/NavBar";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Image from "next/image";
 import Link from "next/link";
@@ -124,7 +123,6 @@ export default function PropertyDetail() {
 
   if (!p) return (
     <main>
-      <NavBar/>
       <div className="container py-12">Chargement...</div>
     </main>
   );
@@ -134,7 +132,6 @@ export default function PropertyDetail() {
 
   return (
     <main>
-      <NavBar/>
       <div className="container py-8 max-w-4xl">
         <Breadcrumbs
           items={[
