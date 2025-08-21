@@ -114,7 +114,108 @@ alter table properties add constraint properties_photos_max6
 -- Index recommandés
 create index if not exists properties_owner_created_idx on properties (owner_id, created_at desc);
 create index if not exists properties_created_idx on properties (created_at desc);
+
+-- Espace locataire: tables et contraintes
+create table if not exists tenant_profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  first_name text,
+  last_name text,
+  bio text,
+  avatar_url text,
+  identity_status text not null default 'unverified', -- unverified | pending_review | verified
+  identity_document_url text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table if not exists rental_dossiers (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  status text not null default 'incomplete', -- incomplete | submitted | auto_validated | rejected
+  monthly_income numeric,
+  employment_type text,
+  employment_start date,
+  dependents_count int,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table if not exists rental_dossier_files (
+  id uuid primary key default gen_random_uuid(),
+  dossier_id uuid references rental_dossiers(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete cascade,
+  category text not null,   -- payslip | contract | tax_notice | domicile | other
+  file_url text not null,
+  mime_type text,
+  created_at timestamptz default now()
+);
+
+-- RLS pour les tables locataires
+alter table tenant_profiles enable row level security;
+alter table rental_dossiers enable row level security;
+alter table rental_dossier_files enable row level security;
+
+-- Policies RLS locataires
+create policy "tenant self select profile" on tenant_profiles for select using (auth.uid() = user_id);
+create policy "tenant upsert profile" on tenant_profiles for insert with check (auth.uid() = user_id);
+create policy "tenant update profile" on tenant_profiles for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "tenant self select dossier" on rental_dossiers for select using (auth.uid() = user_id);
+create policy "tenant insert dossier" on rental_dossiers for insert with check (auth.uid() = user_id);
+create policy "tenant update dossier" on rental_dossiers for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "tenant self select dossier files" on rental_dossier_files for select using (auth.uid() = user_id);
+create policy "tenant insert dossier files" on rental_dossier_files for insert with check (auth.uid() = user_id);
+create policy "tenant delete dossier files" on rental_dossier_files for delete using (auth.uid() = user_id);
+
+-- Index utiles pour les locataires
+create index if not exists rental_dossiers_user_created_idx on rental_dossiers (user_id, created_at desc);
 ```
+
+## Buckets Storage pour l'espace locataire
+
+Créer les buckets suivants dans Supabase Storage:
+
+### 1. Bucket `avatars` (public)
+```sql
+-- Policies avatars (bucket public)
+create policy "public read avatars" on storage.objects for select using (bucket_id='avatars');
+create policy "tenant write own avatars" on storage.objects for insert to authenticated with check (bucket_id='avatars' and split_part(name,'/',1)=auth.uid()::text);
+create policy "tenant update own avatars" on storage.objects for update to authenticated using (bucket_id='avatars' and split_part(name,'/',1)=auth.uid()::text) with check (bucket_id='avatars' and split_part(name,'/',1)=auth.uid()::text);
+create policy "tenant delete own avatars" on storage.objects for delete to authenticated using (bucket_id='avatars' and split_part(name,'/',1)=auth.uid()::text);
+```
+
+### 2. Bucket `identity` (privé)
+```sql
+-- Policies identity (bucket privé)
+create policy "tenant read own identity" on storage.objects for select to authenticated using (bucket_id='identity' and split_part(name,'/',1)=auth.uid()::text);
+create policy "tenant upload own identity" on storage.objects for insert to authenticated with check (bucket_id='identity' and split_part(name,'/',1)=auth.uid()::text);
+create policy "tenant update own identity" on storage.objects for update to authenticated using (bucket_id='identity' and split_part(name,'/',1)=auth.uid()::text) with check (bucket_id='identity' and split_part(name,'/',1)=auth.uid()::text);
+create policy "tenant delete own identity" on storage.objects for delete to authenticated using (bucket_id='identity' and split_part(name,'/',1)=auth.uid()::text);
+```
+
+### 3. Bucket `dossiers` (privé)
+```sql
+-- Policies dossiers (bucket privé)
+create policy "tenant read own dossiers" on storage.objects for select to authenticated using (bucket_id='dossiers' and split_part(name,'/',1)=auth.uid()::text);
+create policy "tenant upload own dossiers" on storage.objects for insert to authenticated with check (bucket_id='dossiers' and split_part(name,'/',1)=auth.uid()::text);
+create policy "tenant update own dossiers" on storage.objects for update to authenticated using (bucket_id='dossiers' and split_part(name,'/',1)=auth.uid()::text) with check (bucket_id='dossiers' and split_part(name,'/',1)=auth.uid()::text);
+create policy "tenant delete own dossiers" on storage.objects for delete to authenticated using (bucket_id='dossiers' and split_part(name,'/',1)=auth.uid()::text);
+```
+
+## Espace locataire
+
+L'espace locataire est accessible via `/tenant/profile` et `/tenant/dossier` pour les utilisateurs avec `role=tenant`.
+
+### Fonctionnalités:
+- **Profil**: Gestion nom, prénom, bio, avatar
+- **Vérification d'identité**: Upload pièce d'identité avec validation automatique immédiate (MVP)
+- **Dossier de location**: Informations personnelles + upload pièces justificatives
+- **Auto-validation**: Règles simples (>= 1 fiche de paie OU avis d'imposition)
+
+### Statuts:
+- Identité: `unverified` | `pending_review` | `verified` 
+- Dossier: `incomplete` | `submitted` | `auto_validated` | `rejected`
 
 ## À venir
 - Paiement Stripe (2% commission) via `/api/checkout` + Connect
