@@ -1,6 +1,6 @@
-# LokSecure – Base propre (Next.js App Router + Tailwind + Supabase)
+# Locations de confiance – Base propre (Next.js App Router + Tailwind + Supabase)
 
-Aucune dépendance Radix/shadcn. Images locales. Auth & annonces en client-side pour simplicité.
+Plateforme de locations de confiance pour une gestion locative sécurisée. Aucune dépendance Radix/shadcn. Images locales. Auth & annonces en client-side pour simplicité.
 
 ## Démarrage
 1) `npm install`
@@ -14,6 +14,22 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
+
+## Réinitialisation de mot de passe
+
+Le système inclut un flux complet de réinitialisation de mot de passe :
+
+1. **Page de connexion** (`/login`) : lien "Mot de passe oublié ?" vers `/forgot-password`
+2. **Demande de réinitialisation** (`/forgot-password`) : formulaire de saisie d'email
+3. **Nouveau mot de passe** (`/reset-password`) : formulaire de mise à jour du mot de passe après clic sur le lien reçu par email
+
+### Configuration requise
+
+Dans le dashboard Supabase, sous **Authentication > URL Configuration**, ajouter l'URL de redirection :
+- **Site URL** : `VOTRE_DOMAINE/reset-password` (ex: `http://localhost:3000/reset-password`)
+- **Redirect URLs** : même URL que Site URL
+
+Le système utilise `NEXT_PUBLIC_SITE_URL` pour construire dynamiquement l'URL de redirection.
 
 ## SQL Supabase
 ```sql
