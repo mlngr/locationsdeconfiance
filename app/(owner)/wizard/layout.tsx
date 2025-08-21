@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import NavBar from "@/components/NavBar";
 
 export default function WizardOwnerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -44,7 +43,6 @@ export default function WizardOwnerLayout({ children }: { children: React.ReactN
 
   return (
     <main>
-      <NavBar />
       {/* Owner-only wizard layout */}
       {children}
     </main>

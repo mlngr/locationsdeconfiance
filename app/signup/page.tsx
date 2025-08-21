@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import NavBar from "@/components/NavBar";
 
 export default function SignupPage() {
   const [email,setEmail]=useState(""); const [password,setPassword]=useState(""); const [role,setRole]=useState("owner");
@@ -21,7 +20,6 @@ export default function SignupPage() {
   };
   return (
     <main>
-      <NavBar/>
       <div className="container py-12 max-w-md">
         <h1 className="text-3xl font-bold">Créer un compte</h1>
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
