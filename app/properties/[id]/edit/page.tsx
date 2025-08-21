@@ -174,6 +174,7 @@ export default function EditPropertyPage() {
           />
           <input
             type="number"
+            step={1}
             className="input"
             placeholder="Prix (€/mois)"
             value={price}

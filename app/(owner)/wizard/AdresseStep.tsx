@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { BanAutocomplete, BanSelection } from "@/components/address/BanAutocomplete";
 import { loadWizard, saveWizard } from "@/lib/wizardStorage";
+import StepsNav from "@/components/wizard/StepsNav";
 
 export default function AdresseStep() {
   const router = useRouter();
@@ -46,11 +47,12 @@ export default function AdresseStep() {
         postalCode,
       },
     });
-    router.push("/wizard/photos");
+    router.push("/wizard/details");
   }
 
   return (
     <main className="container py-10 max-w-2xl">
+      <StepsNav />
       <h1 className="text-3xl font-bold">Adresse</h1>
       <div className="mt-6 grid gap-4">
         {err && <p className="text-red-600">{err}</p>}
