@@ -25,7 +25,10 @@ export default function DashboardPage() {
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
       setUserId(user.id);
       setRole((user.user_metadata as any)?.role ?? "owner");
 
@@ -41,7 +44,7 @@ export default function DashboardPage() {
       }
       setLoading(false);
     })();
-  }, []);
+  }, [router]);
 
   const handleDeleteProperty = async () => {
     if (!propertyToDelete) return;
@@ -112,7 +115,7 @@ export default function DashboardPage() {
           <div className="space-y-6">
             <div className="space-y-3">
               <p className="text-gray-700">Publiez et gérez vos annonces, suivez vos loyers et paiements.</p>
-              <Link href="/properties/new" className="btn btn-primary">Nouvelle annonce</Link>
+              <Link href="/wizard/adresse" className="btn btn-primary">Nouvelle annonce</Link>
             </div>
             
             <div>
@@ -125,7 +128,7 @@ export default function DashboardPage() {
                   <div className="max-w-md mx-auto">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune annonce</h3>
                     <p className="text-gray-600 mb-4">Vous n'avez pas encore créé d'annonce. Commencez dès maintenant !</p>
-                    <Link href="/properties/new" className="btn btn-primary">
+                    <Link href="/wizard/adresse" className="btn btn-primary">
                       Créer une annonce
                     </Link>
                   </div>

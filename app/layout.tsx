@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 export const metadata: Metadata = {
   title: "LokSecure",
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased pb-16 md:pb-0">
+        {children}
+        <MobileBottomNav />
+      </body>
     </html>
   );
 }
