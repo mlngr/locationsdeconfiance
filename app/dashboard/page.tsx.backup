@@ -118,16 +118,15 @@ export default function DashboardPage() {
           ]}
         />
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        {role === "owner" ? (
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <p className="text-gray-700">Publiez et gérez vos annonces, suivez vos loyers et paiements.</p>
-              <Link href="/wizard/adresse" className="btn btn-primary">Nouvelle annonce</Link>
-            </div>
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <p className="text-gray-700">Publiez et gérez vos annonces, suivez vos loyers et paiements.</p>
+            <Link href="/wizard/adresse" className="btn btn-primary">Nouvelle annonce</Link>
+          </div>
+          
+          <div>
+            <h2 className="text-2xl font-semibold mb-4">Mes annonces ({properties.length})</h2>
             
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Mes annonces ({properties.length})</h2>
-              
               {loading ? (
                 <p>Chargement...</p>
               ) : properties.length === 0 ? (
@@ -226,12 +225,7 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-gray-700">Parcourez les annonces et gérez vos favoris & paiements.</p>
-            <Link href="/properties" className="btn btn-outline">Voir les annonces</Link>
-          </div>
-        )}
+        </div>
       </div>
       
       <DeleteModal
