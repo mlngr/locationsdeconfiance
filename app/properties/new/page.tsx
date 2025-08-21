@@ -83,7 +83,7 @@ export default function NewPropertyPage() {
         <form onSubmit={onSubmit} className="mt-6 grid gap-4">
           <input className="input" placeholder="Titre" value={title} onChange={e=>setTitle(e.target.value)} required/>
           <textarea className="input" placeholder="Description" value={description} onChange={e=>setDescription(e.target.value)} required/>
-          <input type="number" className="input" placeholder="Prix (€/mois)" value={price} onChange={e=>setPrice(Number(e.target.value)||0)} required/>
+          <input type="number" step={1} className="input" placeholder="Prix (€/mois)" value={price} onChange={e=>setPrice(Number(e.target.value)||0)} required/>
           <input className="input" placeholder="Ville" value={city} onChange={e=>setCity(e.target.value)} required/>
           <input 
             className="input" 

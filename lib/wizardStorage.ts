@@ -8,8 +8,29 @@ export type AddressStepData = {
   postalCode?: string;
 };
 
+export type DetailsStepData = {
+  type?: string;
+  surface?: number;
+  rooms?: number;
+  furnished?: boolean;
+  floor?: number;
+  elevator?: boolean;
+  description?: string;
+  dpe?: "A" | "B" | "C" | "D" | "E" | "F" | "G";
+  contactEmail?: string;
+  contactPhone?: string;
+};
+
+export type PricingStepData = {
+  rent?: number; // Loyer hors charges
+  charges?: number; // Charges
+  // Note: deposit removed as per requirements
+};
+
 export type WizardState = {
   address?: AddressStepData;
+  details?: DetailsStepData;
+  pricing?: PricingStepData;
   photos?: string[]; // URLs uploadées
 };
 

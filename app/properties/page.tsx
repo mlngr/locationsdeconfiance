@@ -34,8 +34,8 @@ export default function PropertiesPage() {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-6">
         <input className="input md:col-span-2" placeholder="Rechercher..." value={q} onChange={e=>setQ(e.target.value)}/>
         <input className="input" placeholder="Ville" value={city} onChange={e=>setCity(e.target.value)}/>
-        <input className="input" placeholder="Prix min" value={min} onChange={e=>setMin(e.target.value)}/>
-        <input className="input" placeholder="Prix max" value={max} onChange={e=>setMax(e.target.value)}/>
+        <input type="number" step={1} className="input" placeholder="Prix min" value={min} onChange={e=>setMin(e.target.value)}/>
+        <input type="number" step={1} className="input" placeholder="Prix max" value={max} onChange={e=>setMax(e.target.value)}/>
       </div>
       <div className="grid md:grid-cols-3 gap-6 mt-8">
         {filtered.map(p => (
