@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email,setEmail]=useState(""); const [password,setPassword]=useState(""); const [err,setErr]=useState<string|undefined>();
@@ -23,7 +24,7 @@ export default function LoginPage() {
           {err && <p className="text-red-600">{err}</p>}
           <button className="btn btn-primary w-full">Se connecter</button>
         </form>
-        <p className="mt-4 text-sm text-gray-600">Pas encore de compte ? <a className="underline" href="/signup">Créer un compte</a></p>
+        <p className="mt-4 text-sm text-gray-600">Pas encore de compte ? <Link className="underline" href="/signup">Créer un compte</Link></p>
       </div>
     </main>
   );

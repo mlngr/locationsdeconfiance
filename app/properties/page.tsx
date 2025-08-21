@@ -39,7 +39,7 @@ export default function PropertiesPage() {
       </div>
       <div className="grid md:grid-cols-3 gap-6 mt-8">
         {filtered.map(p => (
-          <a key={p.id} href={"/properties/"+p.id} className="card block hover:shadow-xl transition">
+          <Link key={p.id} href={"/properties/"+p.id} className="card block hover:shadow-xl transition">
             <div className="aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden mb-4 flex items-center justify-center">
               {p.photos?.[0] ? <Image src={p.photos[0]} alt="" width={800} height={450}/> : <Image src="/assets/owner.png" alt="" width={800} height={450}/>}
             </div>
@@ -47,7 +47,7 @@ export default function PropertiesPage() {
             <p className="text-gray-600 line-clamp-2">{p.description}</p>
             <p className="mt-2 font-bold">{p.price} €/mois</p>
             <p className="text-sm text-gray-500">{p.city}</p>
-          </a>
+          </Link>
         ))}
       </div>
     </main>
