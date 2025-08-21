@@ -26,7 +26,7 @@ export default function Home() {
         <div className="rounded-2xl overflow-hidden shadow-lg">
           <Image
             src="/assets/hero.png"
-            alt="LokSecure"
+            alt="Locations de confiance"
             width={1200}
             height={640}
             priority

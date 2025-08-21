@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "LokSecure",
+  title: "Locations de confiance",
   description: "SaaS de gestion locative et annonces",
 };
 

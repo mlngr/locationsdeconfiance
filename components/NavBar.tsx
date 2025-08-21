@@ -121,7 +121,7 @@ export default function NavBar() {
   return (
     <div className="border-b bg-white">
       <div className="container flex items-center justify-between h-16">
-        <Link href="/" className="text-xl font-bold">LokSecure</Link>
+        <Link href="/" className="text-xl font-bold">Locations de confiance</Link>
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-2">
