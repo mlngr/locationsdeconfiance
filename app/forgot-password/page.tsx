@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import NavBar from "@/components/NavBar";
 import Link from "next/link";
+import { translateAuthError } from "@/lib/i18n/errorMap";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -32,7 +33,7 @@ export default function ForgotPasswordPage() {
       });
 
       if (error) {
-        setMessage({ type: 'error', text: error.message });
+        setMessage({ type: 'error', text: translateAuthError(error.message) });
       } else {
         setMessage({ 
           type: 'success', 

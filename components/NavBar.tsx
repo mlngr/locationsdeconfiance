@@ -126,7 +126,7 @@ export default function NavBar() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-2">
           {link("/properties", "Annonces")}
-          {user && link("/dashboard", "Dashboard")}
+          {user && userRole === 'owner' && link("/dashboard", "Dashboard")}
           {!loading && (
             user ? (
               userRole === 'tenant' ? (
@@ -207,7 +207,7 @@ export default function NavBar() {
         <div className="md:hidden border-t bg-white">
           <nav className="container py-4 flex flex-col space-y-2">
             {link("/properties", "Annonces")}
-            {user && link("/dashboard", "Dashboard")}
+            {user && userRole === 'owner' && link("/dashboard", "Dashboard")}
             {!loading && (
               user ? (
                 userRole === 'tenant' ? (
