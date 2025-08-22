@@ -240,3 +240,73 @@ L'espace locataire est accessible via `/tenant/profile` et `/tenant/dossier` pou
 ## À venir
 - Paiement Stripe (2% commission) via `/api/checkout` + Connect
 - Favoris & édition (peuvent être ajoutés ensuite)
+
+## Phase Relation PR1: Candidatures et Messagerie
+
+### Nouvelles fonctionnalités (Phase Relation)
+
+Cette phase ajoute le système de candidatures et de messagerie entre locataires et propriétaires.
+
+#### Tables ajoutées:
+
+**1. `applications`** - Candidatures des locataires
+- Liaison entre un locataire et une propriété
+- Statuts: `pending` | `accepted` | `rejected` | `withdrawn`
+- Message d'accompagnement optionnel
+- Contrainte: une seule candidature par locataire/propriété
+
+**2. `message_threads`** - Fils de discussion
+- Créé automatiquement avec chaque candidature
+- Contient les conversations entre locataire et propriétaire
+
+**3. `thread_participants`** - Participants aux discussions
+- Gère qui peut voir/participer à un thread
+- Rôles: `owner` | `tenant` | `participant`
+
+**4. `messages`** - Messages échangés
+- Contenu des conversations
+- Référence au thread et à l'expéditeur
+
+**5. `notifications`** - Notifications utilisateur
+- Alertes pour nouvelles candidatures, messages, etc.
+- Types: `application_received` | `message_received` | `application_status_changed`
+
+#### Fonction atomique `create_application`
+
+La fonction SQL `create_application()` gère en une transaction:
+1. Création de la candidature
+2. Création du thread de discussion
+3. Ajout des participants (propriétaire + locataire)
+4. Message initial optionnel
+5. Notification au propriétaire
+
+#### Politiques RLS
+
+Toutes les tables ont des politiques de sécurité au niveau ligne (RLS):
+- Les locataires voient leurs propres candidatures
+- Les propriétaires voient les candidatures pour leurs propriétés
+- Seuls les participants peuvent voir les messages d'un thread
+- Chaque utilisateur voit ses propres notifications
+
+#### Utilisation
+
+```typescript
+import { createApplication } from '@/lib/applications';
+
+// Créer une candidature
+const result = await createApplication({
+  property_id: 'uuid-property',
+  tenant_id: 'uuid-tenant',
+  dossier_id: 'uuid-dossier', // optionnel
+  message: 'Bonjour, je suis intéressé...' // optionnel
+});
+```
+
+#### Migration
+
+Le fichier de migration se trouve dans `supabase/migrations/20241222_applications_messaging.sql` et contient:
+- Création des 5 nouvelles tables
+- Politiques RLS complètes
+- Index pour les performances
+- Fonctions utilitaires
+- Contraintes d'intégrité
