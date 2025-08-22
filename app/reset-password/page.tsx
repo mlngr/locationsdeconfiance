@@ -4,6 +4,8 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
 import Link from "next/link";
+import PasswordField from "@/components/forms/PasswordField";
+import { translateAuthError } from "@/lib/i18n/errorMap";
 
 export default function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState("");
@@ -12,6 +14,8 @@ export default function ResetPasswordPage() {
   const [sessionLoading, setSessionLoading] = useState(true);
   const [hasValidSession, setHasValidSession] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [newPasswordError, setNewPasswordError] = useState<string|undefined>();
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string|undefined>();
   const router = useRouter();
 
   useEffect(() => {
@@ -36,11 +40,28 @@ export default function ResetPasswordPage() {
     checkSession();
   }, []);
 
-  const validatePassword = (password: string): string | null => {
-    if (password.length < 8) {
+  const validatePassword = (password: string): string | undefined => {
+    if (password.length > 0 && password.length < 8) {
       return 'Le mot de passe doit contenir au moins 8 caractères.';
     }
-    return null;
+    return undefined;
+  };
+
+  const handleNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const password = e.target.value;
+    setNewPassword(password);
+    setNewPasswordError(validatePassword(password));
+  };
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const password = e.target.value;
+    setConfirmPassword(password);
+    // Check if confirm password matches new password
+    if (password && newPassword && password !== newPassword) {
+      setConfirmPasswordError('Les mots de passe ne correspondent pas.');
+    } else {
+      setConfirmPasswordError(undefined);
+    }
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -73,7 +94,7 @@ export default function ResetPasswordPage() {
       });
 
       if (error) {
-        setMessage({ type: 'error', text: error.message });
+        setMessage({ type: 'error', text: translateAuthError(error.message) });
       } else {
         setMessage({ 
           type: 'success', 
@@ -141,35 +162,31 @@ export default function ResetPasswordPage() {
         </p>
         
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="newPassword" className="sr-only">Nouveau mot de passe</label>
-            <input
-              id="newPassword"
-              className="input"
-              placeholder="Nouveau mot de passe (min. 8 caractères)"
-              type="password"
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
-              disabled={loading}
-              required
-              minLength={8}
-            />
-          </div>
+          <PasswordField
+            name="newPassword"
+            label="Nouveau mot de passe"
+            value={newPassword}
+            onChange={handleNewPasswordChange}
+            minLength={8}
+            autoComplete="new-password"
+            error={newPasswordError}
+            placeholder="Nouveau mot de passe (min. 8 caractères)"
+            disabled={loading}
+            required
+          />
           
-          <div>
-            <label htmlFor="confirmPassword" className="sr-only">Confirmer le mot de passe</label>
-            <input
-              id="confirmPassword"
-              className="input"
-              placeholder="Confirmer le mot de passe"
-              type="password"
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-              disabled={loading}
-              required
-              minLength={8}
-            />
-          </div>
+          <PasswordField
+            name="confirmPassword"
+            label="Confirmer le mot de passe"
+            value={confirmPassword}
+            onChange={handleConfirmPasswordChange}
+            minLength={8}
+            autoComplete="new-password"
+            error={confirmPasswordError}
+            placeholder="Confirmer le mot de passe"
+            disabled={loading}
+            required
+          />
           
           {message && (
             <div 

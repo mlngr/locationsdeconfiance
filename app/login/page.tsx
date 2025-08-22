@@ -3,6 +3,8 @@ import { useState, useEffect, Suspense } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
+import PasswordField from "@/components/forms/PasswordField";
+import { translateAuthError } from "@/lib/i18n/errorMap";
 
 function LoginForm() {
   const [email,setEmail]=useState(""); 
@@ -55,7 +57,7 @@ function LoginForm() {
     }
     
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setErr(error.message); else router.push("/dashboard");
+    if (error) setErr(translateAuthError(error.message)); else router.push("/dashboard");
   };
 
   return (
@@ -63,19 +65,16 @@ function LoginForm() {
       <h1 className="text-3xl font-bold">Connexion</h1>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         <input className="input" placeholder="Email" type="email" value={email} onChange={e=>setEmail(e.target.value)} />
-        <div>
-          <input 
-            className="input" 
-            placeholder="Mot de passe" 
-            type="password" 
-            value={password} 
-            onChange={handlePasswordChange}
-            minLength={8}
-          />
-          {passwordError && (
-            <p className="mt-1 text-sm text-red-600">{passwordError}</p>
-          )}
-        </div>
+        <PasswordField
+          name="password"
+          label="Mot de passe"
+          value={password}
+          onChange={handlePasswordChange}
+          minLength={8}
+          autoComplete="current-password"
+          error={passwordError}
+          placeholder="Mot de passe"
+        />
         {successMessage && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700" role="alert" aria-live="polite">
             {successMessage}
