@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
 
 function LoginForm() {
@@ -9,18 +9,44 @@ function LoginForm() {
   const [password,setPassword]=useState(""); 
   const [err,setErr]=useState<string|undefined>();
   const [successMessage, setSuccessMessage] = useState<string|undefined>();
+  const [passwordError, setPasswordError] = useState<string|undefined>();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const message = searchParams.get('message');
-    if (message === 'password-updated') {
+    // Check for password reset success flag in localStorage
+    const resetSuccessFlag = localStorage.getItem('password_reset_success');
+    if (resetSuccessFlag === '1') {
       setSuccessMessage('Mot de passe mis à jour avec succès. Vous pouvez maintenant vous connecter.');
+      // Remove the flag after showing the message
+      localStorage.removeItem('password_reset_success');
     }
-  }, [searchParams]);
+  }, []);
+
+  const validatePassword = (password: string): string | undefined => {
+    if (password.length > 0 && password.length < 8) {
+      return 'Le mot de passe doit contenir au moins 8 caractères.';
+    }
+    return undefined;
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    setPasswordError(validatePassword(newPassword));
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear previous errors
+    setErr(undefined);
+    
+    // Client-side password validation before submission
+    const passwordValidationError = validatePassword(password);
+    if (passwordValidationError) {
+      setErr(passwordValidationError);
+      return;
+    }
     
     // Check if Supabase is configured
     if (!isSupabaseConfigured() || !supabase) {
@@ -37,9 +63,21 @@ function LoginForm() {
       <h1 className="text-3xl font-bold">Connexion</h1>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         <input className="input" placeholder="Email" type="email" value={email} onChange={e=>setEmail(e.target.value)} />
-        <input className="input" placeholder="Mot de passe" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
+        <div>
+          <input 
+            className="input" 
+            placeholder="Mot de passe" 
+            type="password" 
+            value={password} 
+            onChange={handlePasswordChange}
+            minLength={8}
+          />
+          {passwordError && (
+            <p className="mt-1 text-sm text-red-600">{passwordError}</p>
+          )}
+        </div>
         {successMessage && (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700" role="alert">
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700" role="alert" aria-live="polite">
             {successMessage}
           </div>
         )}
