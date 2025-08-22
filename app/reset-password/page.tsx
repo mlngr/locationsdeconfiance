@@ -80,9 +80,10 @@ export default function ResetPasswordPage() {
           text: 'Mot de passe mis à jour avec succès. Redirection...' 
         });
         
-        // Redirect to login after a short delay
+        // Store success flag in localStorage and redirect to login
+        localStorage.setItem('password_reset_success', '1');
         setTimeout(() => {
-          router.push('/login?message=password-updated');
+          router.push('/login');
         }, 2000);
       }
     } catch (err: any) {

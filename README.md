@@ -23,6 +23,10 @@ Le système inclut un flux complet de réinitialisation de mot de passe :
 2. **Demande de réinitialisation** (`/forgot-password`) : formulaire de saisie d'email
 3. **Nouveau mot de passe** (`/reset-password`) : formulaire de mise à jour du mot de passe après clic sur le lien reçu par email
 
+### Post-réinitialisation
+
+Après une réinitialisation réussie du mot de passe, l'utilisateur est redirigé vers la page de connexion avec une bannière de confirmation verte. Le système utilise un mécanisme de stockage local temporaire pour afficher cette confirmation de manière sécurisée, sans exposer d'informations sensibles dans l'URL.
+
 ### Configuration requise
 
 Dans le dashboard Supabase, sous **Authentication > URL Configuration**, ajouter l'URL de redirection :
